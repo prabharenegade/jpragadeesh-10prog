@@ -4,12 +4,9 @@ import { useEffect, useRef, useState } from "react";
 // - Uses a professional AI-generated portrait as the face
 // - Overlays a lip-sync mouth driven by real audio amplitude
 // - Adds subtle breathing motion, ambient glow, pulse rings when speaking
-const PORTRAITS = {
-  aria: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=facearea&facepad=2.4&w=640&h=640&q=80",
-  ravi: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=facearea&facepad=2.4&w=640&h=640&q=80",
-};
+const DEFAULT_PORTRAIT = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=facearea&facepad=2.4&w=640&h=640&q=80";
 
-export default function AIAvatar({ audioEl, speaking, persona = "aria" }) {
+export default function AIAvatar({ audioEl, speaking, interviewer }) {
   const [mouth, setMouth] = useState(0);
   const rafRef = useRef(null);
   const audioCtxRef = useRef(null);
@@ -65,7 +62,9 @@ export default function AIAvatar({ audioEl, speaking, persona = "aria" }) {
     return () => cancelAnimationFrame(rafRef.current);
   }, [audioEl, speaking]);
 
-  const portrait = PORTRAITS[persona] || PORTRAITS.aria;
+  const portrait = interviewer?.portrait || DEFAULT_PORTRAIT;
+  const name = interviewer?.name || "Aria";
+  const role = interviewer?.role || "AI Interviewer";
   const mouthOpen = 8 + mouth * 34;
   const mouthWide = 44 + mouth * 12;
 
@@ -93,7 +92,8 @@ export default function AIAvatar({ audioEl, speaking, persona = "aria" }) {
       }}>
         <img
           src={portrait}
-          alt="AI Interviewer"
+          alt={name}
+          key={portrait}
           crossOrigin="anonymous"
           referrerPolicy="no-referrer"
           className="w-full h-full object-cover rounded-full ring-4 ring-indigo-500/60 shadow-[0_0_80px_rgba(99,102,241,0.55)]"
@@ -144,8 +144,8 @@ export default function AIAvatar({ audioEl, speaking, persona = "aria" }) {
       {/* Nameplate */}
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur px-3 py-1.5 rounded-full text-xs font-semibold tracking-wide flex items-center gap-2">
         <span className={`w-1.5 h-1.5 rounded-full ${speaking ? "bg-emerald-400 animate-pulse" : "bg-slate-500"}`} />
-        <span className="text-white">Aria</span>
-        <span className="text-slate-400 text-[10px]">· AI Interviewer</span>
+        <span className="text-white">{name}</span>
+        <span className="text-slate-400 text-[10px]">· {role}</span>
       </div>
     </div>
   );

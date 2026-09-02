@@ -11,8 +11,52 @@ import {
 const ROLES = ["Software Engineer", "Data Scientist", "Frontend Developer", "ML Engineer", "Backend Developer"];
 const BACKEND = process.env.REACT_APP_BACKEND_URL;
 
+// Gender-matched TTS voices. OpenAI TTS voices:
+//   Female: nova (energetic), shimmer (bright), coral (warm), sage (wise)
+//   Male:   onyx (deep), echo (calm), ash (clear), fable (British)
+const INTERVIEWERS = [
+  {
+    id: "aria",
+    name: "Aria",
+    gender: "female",
+    voice: "nova",
+    role: "Senior Engineer",
+    portrait: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=facearea&facepad=2.4&w=640&h=640&q=80",
+    thumb:    "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=facearea&facepad=2.4&w=180&h=180&q=80",
+  },
+  {
+    id: "maya",
+    name: "Maya",
+    gender: "female",
+    voice: "shimmer",
+    role: "Tech Lead",
+    portrait: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=facearea&facepad=2.4&w=640&h=640&q=80",
+    thumb:    "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=facearea&facepad=2.4&w=180&h=180&q=80",
+  },
+  {
+    id: "james",
+    name: "James",
+    gender: "male",
+    voice: "onyx",
+    role: "Hiring Manager",
+    portrait: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=facearea&facepad=2.4&w=640&h=640&q=80",
+    thumb:    "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=facearea&facepad=2.4&w=180&h=180&q=80",
+  },
+  {
+    id: "ravi",
+    name: "Ravi",
+    gender: "male",
+    voice: "echo",
+    role: "Staff Engineer",
+    portrait: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=facearea&facepad=2.4&w=640&h=640&q=80",
+    thumb:    "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=facearea&facepad=2.4&w=180&h=180&q=80",
+  },
+];
+
 export default function Interview() {
   const [role, setRole] = useState("Software Engineer");
+  const [interviewerId, setInterviewerId] = useState("aria");
+  const interviewer = INTERVIEWERS.find((i) => i.id === interviewerId) || INTERVIEWERS[0];
   const [liveMode, setLiveMode] = useState(true); // realtime auto-listen
   const [session, setSession] = useState(null);
   const [question, setQuestion] = useState("");
@@ -98,7 +142,7 @@ export default function Interview() {
     try {
       setSpeaking(true);
       setPaused(false);
-      const res = await api.post("/tts", { text, voice: "onyx" });
+      const res = await api.post("/tts", { text, voice: interviewer.voice });
       const url = BACKEND + res.data.url;
       audioRef.current?.pause();
       const audio = new Audio(url);
@@ -289,8 +333,8 @@ export default function Interview() {
               <div className="mb-5 flex items-center gap-4">
                 <div className="relative w-20 h-20 rounded-full overflow-hidden ring-2 ring-indigo-400/60 shadow-[0_0_40px_rgba(99,102,241,0.5)]">
                   <img
-                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=facearea&facepad=2.4&w=200&h=200&q=80"
-                    alt="Aria"
+                    src={interviewer.portrait}
+                    alt={interviewer.name}
                     crossOrigin="anonymous"
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover"
@@ -298,13 +342,51 @@ export default function Interview() {
                   <span className="absolute bottom-1 right-1 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-slate-900" />
                 </div>
                 <div>
-                  <h3 className="font-display text-xl font-semibold">Meet Aria</h3>
-                  <p className="text-xs text-slate-400">Your AI interviewer · Realtime · Voice · Camera</p>
+                  <h3 className="font-display text-xl font-semibold">Meet {interviewer.name}</h3>
+                  <p className="text-xs text-slate-400">
+                    {interviewer.role} · {interviewer.gender === "male" ? "Male" : "Female"} voice · Realtime
+                  </p>
                 </div>
               </div>
-              <p className="text-slate-400 text-sm mb-5 leading-relaxed">
-                Face-to-face video call with Aria. Your camera is on the left — she'll join on the right
-                once you hit start. Live mode auto-listens the moment she stops talking.
+
+              {/* Interviewer picker */}
+              <p className="text-xs font-mono uppercase tracking-widest text-slate-500 mb-2">Choose your interviewer</p>
+              <div className="grid grid-cols-4 gap-2 mb-5" data-testid="interviewer-picker">
+                {INTERVIEWERS.map((iv) => {
+                  const active = iv.id === interviewerId;
+                  return (
+                    <button
+                      key={iv.id}
+                      onClick={() => setInterviewerId(iv.id)}
+                      data-testid={`interviewer-${iv.id}`}
+                      className={`relative rounded-xl overflow-hidden aspect-square transition-all active:scale-95 ${
+                        active ? "ring-2 ring-indigo-400 scale-[1.03]" : "ring-1 ring-slate-700 hover:ring-slate-500 opacity-70 hover:opacity-100"
+                      }`}
+                      title={`${iv.name} · ${iv.gender} voice (${iv.voice})`}
+                    >
+                      <img src={iv.thumb} alt={iv.name}
+                        crossOrigin="anonymous" referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover" />
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-1.5">
+                        <p className="text-[10px] font-semibold text-white truncate">{iv.name}</p>
+                        <p className="text-[9px] text-slate-300 truncate">
+                          {iv.gender === "male" ? "♂" : "♀"} {iv.voice}
+                        </p>
+                      </div>
+                      {active && (
+                        <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-indigo-500 flex items-center justify-center">
+                          <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4">
+                            <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <p className="text-slate-400 text-sm mb-4 leading-relaxed">
+                Face-to-face video call. Each interviewer has a matching {interviewer.gender} voice and their own style.
               </p>
               <select value={role} onChange={(e) => setRole(e.target.value)}
                 data-testid="role-select"
@@ -315,7 +397,7 @@ export default function Interview() {
                 <input type="checkbox" checked={liveMode} onChange={(e) => setLiveMode(e.target.checked)}
                   className="w-4 h-4 accent-indigo-500" />
                 <span className="text-sm text-slate-300 flex items-center gap-2">
-                  <Radio className="w-4 h-4 text-rose-400" /> Live mode — auto-listen when Aria stops speaking
+                  <Radio className="w-4 h-4 text-rose-400" /> Live mode — auto-listen when {interviewer.name} stops speaking
                 </span>
               </label>
               <button onClick={start} disabled={busy} data-testid="start-interview-btn"
@@ -388,9 +470,9 @@ export default function Interview() {
               <div className={`relative rounded-2xl overflow-hidden aspect-video bg-gradient-to-br from-slate-900 via-indigo-950/40 to-slate-900 border transition-colors ${
                 speaking ? "border-indigo-400 glow-indigo" : "border-slate-800"
               }`}>
-                <AIAvatar audioEl={audioNode} speaking={speaking} />
+                <AIAvatar audioEl={audioNode} speaking={speaking} interviewer={interviewer} />
                 <div className="absolute top-2 left-2 flex items-center gap-1.5 text-xs bg-black/60 px-2 py-1 rounded-lg">
-                  <span className="w-2 h-2 rounded-full bg-indigo-400" /> Aria · AI Interviewer
+                  <span className="w-2 h-2 rounded-full bg-indigo-400" /> {interviewer.name} · {interviewer.role}
                 </div>
                 {liveMode && (
                   <div className="absolute top-2 right-2 flex items-center gap-1.5 text-xs bg-rose-500/80 px-2 py-1 rounded-lg font-mono">
@@ -490,7 +572,7 @@ export default function Interview() {
                 </div>
                 {liveMode && !speaking && !listening && !transcribing && (
                   <p className="text-xs text-slate-500 mt-3 flex items-center gap-1.5">
-                    <Radio className="w-3 h-3 text-rose-400" /> Live mode is on — mic auto-starts when Aria finishes.
+                    <Radio className="w-3 h-3 text-rose-400" /> Live mode is on — mic auto-starts when {interviewer.name} finishes.
                   </p>
                 )}
               </div>
@@ -532,7 +614,7 @@ export default function Interview() {
             <p className="text-sm text-slate-400 mb-4">Running avg: <span className="text-amber-400 font-bold">{avg}/10</span></p>
             <div className="text-xs text-slate-500 space-y-1.5 border-t border-slate-800 pt-4">
               <p className="flex items-center gap-2"><Mic className="w-3.5 h-3.5" /> Answer by voice or text</p>
-              <p className="flex items-center gap-2"><Volume2 className="w-3.5 h-3.5" /> Aria speaks with lip-sync</p>
+              <p className="flex items-center gap-2"><Volume2 className="w-3.5 h-3.5" /> {interviewer.name} speaks with lip-sync</p>
               <p className="flex items-center gap-2"><Radio className="w-3.5 h-3.5 text-rose-400" /> Live mode = hands-free</p>
               <p className="flex items-center gap-2"><Circle className="w-3.5 h-3.5" /> Recorded for replay</p>
             </div>
