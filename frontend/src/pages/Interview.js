@@ -45,6 +45,13 @@ export default function Interview() {
 
   useEffect(() => { liveRef.current = liveMode; }, [liveMode]);
 
+  // Re-attach stream to whichever <video> element is currently mounted
+  useEffect(() => {
+    if (videoRef.current && streamRef.current && videoRef.current.srcObject !== streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  });
+
   const loadRecords = useCallback(() => {
     api.get("/interview/records").then((r) => setRecords(r.data)).catch(() => {});
   }, []);
@@ -245,44 +252,80 @@ export default function Interview() {
 
       {!session && (
         <>
-          <div className="glass rounded-2xl p-8 max-w-lg">
-            <div className="mb-5 flex items-center gap-4">
-              <div className="relative w-20 h-20 rounded-full overflow-hidden ring-2 ring-indigo-400/60 shadow-[0_0_40px_rgba(99,102,241,0.5)]">
-                <img
-                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=facearea&facepad=2.4&w=200&h=200&q=80"
-                  alt="Aria"
-                  crossOrigin="anonymous"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover"
-                />
-                <span className="absolute bottom-1 right-1 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-slate-900" />
-              </div>
-              <div>
-                <h3 className="font-display text-xl font-semibold">Meet Aria</h3>
-                <p className="text-xs text-slate-400">Your AI interviewer · Realtime · Voice · Camera</p>
+          {/* Pre-join video-call style stage */}
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Left: self-view camera preview (like Google Meet lobby) */}
+            <div className="relative rounded-2xl overflow-hidden aspect-video bg-slate-950 border border-slate-800 shadow-2xl">
+              <video ref={videoRef} autoPlay playsInline muted data-testid="webcam-preview"
+                className="w-full h-full object-cover scale-x-[-1]" />
+              {!camOn && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-400 bg-gradient-to-br from-slate-900 via-slate-950 to-black">
+                  <VideoOff className="w-14 h-14 opacity-60" />
+                  <p className="text-sm">Camera is off</p>
+                  <button onClick={startCam} data-testid="enable-cam-btn"
+                    className="flex items-center gap-2 mt-2 px-5 py-2.5 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold transition-colors active:scale-95">
+                    <Video className="w-4 h-4" /> Turn on camera
+                  </button>
+                </div>
+              )}
+              {camOn && (
+                <>
+                  <div className="absolute top-3 left-3 flex items-center gap-1.5 text-xs bg-black/70 backdrop-blur px-2.5 py-1 rounded-lg">
+                    <Circle className="w-2 h-2 fill-emerald-400 text-emerald-400" /> You · Preview
+                  </div>
+                  <button onClick={stopCam} data-testid="stop-cam-btn"
+                    className="absolute top-3 right-3 w-9 h-9 rounded-full bg-rose-500/90 hover:bg-rose-600 flex items-center justify-center transition-colors active:scale-95">
+                    <VideoOff className="w-4 h-4 text-white" />
+                  </button>
+                </>
+              )}
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[10px] font-mono uppercase tracking-widest text-slate-400 bg-black/60 px-2 py-1 rounded">
+                Video-call ready
               </div>
             </div>
-            <p className="text-slate-400 text-sm mb-5 leading-relaxed">
-              Meet Aria — your AI interviewer with a real face and voice. Camera on, she speaks each
-              question aloud with lip-sync animation, and you answer hands-free. Live mode auto-listens
-              the moment she stops talking.
-            </p>
-            <select value={role} onChange={(e) => setRole(e.target.value)}
-              data-testid="role-select"
-              className="w-full bg-slate-900/70 border border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-500 mb-4 text-slate-200">
-              {ROLES.map((r) => <option key={r}>{r}</option>)}
-            </select>
-            <label className="flex items-center gap-3 mb-5 cursor-pointer select-none" data-testid="live-toggle">
-              <input type="checkbox" checked={liveMode} onChange={(e) => setLiveMode(e.target.checked)}
-                className="w-4 h-4 accent-indigo-500" />
-              <span className="text-sm text-slate-300 flex items-center gap-2">
-                <Radio className="w-4 h-4 text-rose-400" /> Live mode — auto-listen when Aria stops speaking
-              </span>
-            </label>
-            <button onClick={start} disabled={busy} data-testid="start-interview-btn"
-              className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 font-semibold px-6 py-3 rounded-full transition-colors active:scale-95 disabled:opacity-50">
-              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Video className="w-4 h-4" />} Start Live Interview
-            </button>
+
+            {/* Right: pre-join controls */}
+            <div className="glass rounded-2xl p-8">
+              <div className="mb-5 flex items-center gap-4">
+                <div className="relative w-20 h-20 rounded-full overflow-hidden ring-2 ring-indigo-400/60 shadow-[0_0_40px_rgba(99,102,241,0.5)]">
+                  <img
+                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=facearea&facepad=2.4&w=200&h=200&q=80"
+                    alt="Aria"
+                    crossOrigin="anonymous"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover"
+                  />
+                  <span className="absolute bottom-1 right-1 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-slate-900" />
+                </div>
+                <div>
+                  <h3 className="font-display text-xl font-semibold">Meet Aria</h3>
+                  <p className="text-xs text-slate-400">Your AI interviewer · Realtime · Voice · Camera</p>
+                </div>
+              </div>
+              <p className="text-slate-400 text-sm mb-5 leading-relaxed">
+                Face-to-face video call with Aria. Your camera is on the left — she'll join on the right
+                once you hit start. Live mode auto-listens the moment she stops talking.
+              </p>
+              <select value={role} onChange={(e) => setRole(e.target.value)}
+                data-testid="role-select"
+                className="w-full bg-slate-900/70 border border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-500 mb-4 text-slate-200">
+                {ROLES.map((r) => <option key={r}>{r}</option>)}
+              </select>
+              <label className="flex items-center gap-3 mb-5 cursor-pointer select-none" data-testid="live-toggle">
+                <input type="checkbox" checked={liveMode} onChange={(e) => setLiveMode(e.target.checked)}
+                  className="w-4 h-4 accent-indigo-500" />
+                <span className="text-sm text-slate-300 flex items-center gap-2">
+                  <Radio className="w-4 h-4 text-rose-400" /> Live mode — auto-listen when Aria stops speaking
+                </span>
+              </label>
+              <button onClick={start} disabled={busy} data-testid="start-interview-btn"
+                className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 font-semibold px-6 py-3.5 rounded-full transition-colors active:scale-95 disabled:opacity-50 text-white">
+                {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Video className="w-4 h-4" />} Join Live Interview
+              </button>
+              <p className="text-[11px] text-slate-500 mt-3 text-center">
+                Camera & mic will be used only during the session. Nothing is uploaded until you finish.
+              </p>
+            </div>
           </div>
 
           <div className="glass rounded-2xl p-6" data-testid="interview-history">
@@ -357,9 +400,9 @@ export default function Interview() {
               </div>
 
               {/* Self video */}
-              <div className="relative rounded-2xl overflow-hidden aspect-video bg-slate-900 border border-slate-800">
+              <div className="relative rounded-2xl overflow-hidden aspect-video bg-slate-900 border border-slate-800 shadow-xl">
                 <video ref={videoRef} autoPlay playsInline muted data-testid="webcam-video"
-                  className="w-full h-full object-cover" />
+                  className="w-full h-full object-cover scale-x-[-1]" />
                 {!camOn && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-500">
                     <VideoOff className="w-8 h-8" />
