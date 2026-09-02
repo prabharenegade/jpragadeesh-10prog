@@ -5,7 +5,7 @@ import AIAvatar from "@/components/AIAvatar";
 import {
   Video, VideoOff, Loader2, Send, Star, RotateCcw, Mic, Volume2, Circle,
   History, Play, ChevronDown, ChevronUp, Save, Pause, Square, StopCircle,
-  Radio, MicOff, Zap,
+  Radio, MicOff,
 } from "lucide-react";
 
 const ROLES = ["Software Engineer", "Data Scientist", "Frontend Developer", "ML Engineer", "Backend Developer"];
@@ -246,13 +246,20 @@ export default function Interview() {
       {!session && (
         <>
           <div className="glass rounded-2xl p-8 max-w-lg">
-            <div className="mb-5 flex items-center gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center">
-                <Zap className="w-7 h-7 text-white" />
+            <div className="mb-5 flex items-center gap-4">
+              <div className="relative w-20 h-20 rounded-full overflow-hidden ring-2 ring-indigo-400/60 shadow-[0_0_40px_rgba(99,102,241,0.5)]">
+                <img
+                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=facearea&facepad=2.4&w=200&h=200&q=80"
+                  alt="Aria"
+                  crossOrigin="anonymous"
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover"
+                />
+                <span className="absolute bottom-1 right-1 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-slate-900" />
               </div>
               <div>
-                <h3 className="font-display text-xl font-semibold">1-on-1 Live AI Interview</h3>
-                <p className="text-xs text-slate-400">Realtime · Camera · Voice · Animated interviewer</p>
+                <h3 className="font-display text-xl font-semibold">Meet Aria</h3>
+                <p className="text-xs text-slate-400">Your AI interviewer · Realtime · Voice · Camera</p>
               </div>
             </div>
             <p className="text-slate-400 text-sm mb-5 leading-relaxed">
